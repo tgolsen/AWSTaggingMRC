@@ -1,0 +1,21 @@
+{
+    "name": "ted/aws-tagging",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ted\\AwsTagging\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ted Olsen",
+            "email": "tolsen@pmc.com"
+        }
+    ],
+    "require": {
+        "twig/twig": "^3.20",
+        "vlucas/phpdotenv": "^5.6",
+        "ext-pdo": "*"
+    }
+}

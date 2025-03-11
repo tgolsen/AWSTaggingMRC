@@ -1,0 +1,97 @@
+create table AWSTagging.awsCliCommands
+(
+    id       int auto_increment
+        primary key,
+    command  text null,
+    response text null
+);
+
+create table AWSTagging.taggables
+(
+    id                                                  int auto_increment
+        primary key,
+    Identifier                                          varchar(255) null,
+    Service                                             text         null,
+    Type                                                text         null,
+    Region                                              text         null,
+    helpful_string                                      text         null,
+    Tag_Action                                          varchar(255) null,
+    Tag_Name                                            text         null,
+    Tag_Application                                     text         null,
+    Tag_Brand                                           text         null,
+    Tag_Department                                      text         null,
+    Tag_Environment                                     text         null,
+    Tag_Managed                                         text         null,
+    Tag_QuickSetupID                                    text         null,
+    Tag_QuickSetupType                                  text         null,
+    Tag_QuickSetupVersion                               text         null,
+    Tag_SFTP_ryan                                       text         null,
+    Tag_Team                                            text         null,
+    Tag_Terraform                                       text         null,
+    Tag_alpha_eksctl_io_cluster_oidc_enabled            text         null,
+    Tag_aws_chalice                                     text         null,
+    Tag_aws_autoscaling_groupName                       text         null,
+    Tag_aws_cloudformation_logical_id                   text         null,
+    Tag_aws_cloudformation_stack_id                     text         null,
+    Tag_aws_cloudformation_stack_name                   text         null,
+    Tag_aws_dlm_expirationTime                          text         null,
+    Tag_aws_dlm_lifecycle_policy_id                     text         null,
+    Tag_aws_dlm_lifecycle_schedule_name                 text         null,
+    Tag_aws_ec2_fleet_id                                text         null,
+    Tag_aws_ec2launchtemplate_id                        text         null,
+    Tag_aws_ec2launchtemplate_version                   text         null,
+    Tag_aws_eks_cluster_name                            text         null,
+    Tag_description                                     text         null,
+    Tag_dlm_managed                                     text         null,
+    Tag_eks                                             text         null,
+    Tag_eks_cluster_name                                text         null,
+    Tag_eks_nodegroup_name                              text         null,
+    Tag_env                                             text         null,
+    Tag_family                                          text         null,
+    Tag_instance_id                                     text         null,
+    Tag_k8s_io_cluster_autoscaler_eks_common_production text         null,
+    Tag_k8s_io_cluster_autoscaler_eks_development       text         null,
+    Tag_k8s_io_cluster_autoscaler_eks_production        text         null,
+    Tag_k8s_io_cluster_autoscaler_eks_synd              text         null,
+    Tag_k8s_io_cluster_autoscaler_enabled               text         null,
+    Tag_k8s_io_cluster_autoscaler_nithin                text         null,
+    Tag_kubernetes_io_cluster_eks_common_production     text         null,
+    Tag_kubernetes_io_cluster_eks_development           text         null,
+    Tag_kubernetes_io_cluster_eks_production            text         null,
+    Tag_kubernetes_io_cluster_eks_synd                  text         null,
+    Tag_kubernetes_io_cluster_nithin                    text         null,
+    Tag_kubernetes_io_created_for_pv_name               text         null,
+    Tag_kubernetes_io_created_for_pvc_name              text         null,
+    Tag_kubernetes_io_created_for_pvc_namespace         text         null,
+    Tag_kubernetes_io_role_elb                          text         null,
+    Tag_kubernetes_io_service_name                      text         null,
+    Tag_lambda_console_blueprint                        text         null,
+    Tag_map_migrated                                    text         null,
+    Tag_ryan                                            text         null,
+    Tag_serverlessrepo_applicationId                    text         null,
+    Tag_serverlessrepo_semanticVersion                  text         null,
+    Tag_sftp                                            text         null,
+    Tag_shareAndCopy                                    text         null,
+    Tag_site                                            text         null,
+    Tag_timestamp                                       text         null,
+    Tag_workload_type                                   text         null,
+    Tags                                                text         null,
+    ARN                                                 text         null,
+    Import                                              text         null,
+    Tag                                                 text         null
+);
+
+create table AWSTagging.tagged
+(
+    identity    int auto_increment
+        primary key,
+    id          int                          null,
+    identifier  varchar(255) charset utf8mb3 null,
+    ARN         varchar(511) charset utf8mb3 null,
+    name        text                         null,
+    application varchar(127)                 null,
+    brand       varchar(127)                 null,
+    environment varchar(127)                 null,
+    awsDigest   text                         null
+);
+

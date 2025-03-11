@@ -1,0 +1,9 @@
+.idea/
+vendor/
+
+*.env
+composer.lock
+
+promptLog.txt
+archive/*
+data/*
