@@ -9,10 +9,6 @@ require 'src/dotEnvLoad.php';
 // Create an instance of the OpenAIChatClient
 $client = new OpenAIChatClient($_ENV['OAI_SERVER'], $_ENV['OAI_KEY'], $_ENV['OAI_MODEL']);
 
-// Path to the local CSV file
-$csvFilePath = 'data/pmrc-billboard.csv';
-$outputTable = 'tagged';
-
 // Connect to MySQL server
 $pdo = new PDO("mysql:host={$_ENV['DB_HOST']}", $_ENV['DB_USER'], $_ENV['DB_PASSWORD']);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -34,7 +30,7 @@ foreach ($taggables as $data) {
     ];
 
     // Convert data to a descriptive string
-    $csvData = json_encode($data);
+    $stringData = json_encode($data);
     echo "Processing  #{$data['id']}\n";
 
     $possibleApplications = [
@@ -65,7 +61,7 @@ foreach ($taggables as $data) {
     // Prompt the AI with the structured data using headers
     $messages[] = [
         'role' => 'user',
-        'content' => "Based on this data (headers mapped to values): \"$csvData\", determine one value for each of the following. The intent is to populate the corresponding Tag_x fields, so for example a lack of information for Tag_Brand is not an indication that we do not have enough information to determine Brand. Do not explain, only provide a value or [not enough information]. 
+        'content' => "Based on this data (headers mapped to values): \"$stringData\", determine one value for each of the following. The intent is to populate the corresponding Tag_x fields, so for example a lack of information for Tag_Brand is not an indication that we do not have enough information to determine Brand. Do not explain, only provide a value or [not enough information]. 
             Some Guidelines: 
             - if the data contains 'bbthr' it is probably MRC brand.
             - if the data contains 'bb' without 'bbthr' it is probably Billboard brand.
@@ -181,7 +177,7 @@ foreach ($taggables as $data) {
     [$response, $messages] = $client->chat($messages);
 
     $output = json_decode($response, true);
-    insertRow($pdo, $outputTable, $output);
+    insertRow($pdo, 'tagged', $output);
 }
 
 function pdoQuery($pdo, $sql)
