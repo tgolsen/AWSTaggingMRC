@@ -5,7 +5,8 @@ I wrote this to help tag resources in AWS automatically.
 ## Prerequisites
 
 * [AWS CLI tool](https://aws.amazon.com/cli/)
-  * and a read-only profile configured in your `~/.aws/credentials` file
+  * and a **read-only** profile configured in your `~/.aws/credentials` file
+  * this is not enforced (no policy check or anything)
 * Local PHP
 * A mySql DB server where you can create a DB
 
