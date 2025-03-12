@@ -225,11 +225,24 @@ function ensureJSON($client, $response, $messages)
     return [$response, $messages];
 }
 
-function pdoQuery($pdo, $sql)
+function pdoQuery(PDO $pdo, string $sql, array $values = [])
 {
     global $lastQuery;
-    $lastQuery = $sql;
-    return $pdo->query($sql)->fetchAll();
+    $stmt = $pdo->prepare($sql);
+
+    $lastQuery = [$stmt->queryString, $values];
+
+    try {
+        $stmt->execute($values);
+    } catch (Exception $e) {
+        echo "Failed to execute query:\n" . $e->getMessage() . "\n";
+        echo "query: " . $stmt->queryString ."\n";
+        echo "values: \n";
+        var_dump($values);
+        var_dump($stmt->errorInfo());
+    }
+
+    return $stmt->fetchAll();
 }
 
 /**
@@ -250,7 +263,6 @@ function insertRow($pdo, $tableName, $row)
 
     $insertSql = "INSERT INTO `$tableName` ($columnsSql) VALUES ($placeholdersSql)";
     $stmt = $pdo->prepare($insertSql);
-
 
     // Process the row, serializing arrays/objects if needed
     $values = array_map(function ($value) {
@@ -280,7 +292,7 @@ function executeAWSCLICommand($pdo, $taggable_id, $awsCLICommand): ?string
     }
 
     // Also persistent cache in DB
-    $result = pdoQuery($pdo, "SELECT response FROM awsCliCommands WHERE command = '" . $awsCLICommand . "'");
+    $result = pdoQuery($pdo, "SELECT response FROM awsCliCommands WHERE command = ?", [$awsCLICommand]);
     if (!empty($result[0]['response'])) {
         echo "AWS CLI cached in DB:\n$awsCLICommand\n";
 //        var_dump($result[0]['response']);
