@@ -1,12 +1,13 @@
-create table AWSTagging.awsCliCommands
+create table awsCliCommands
 (
-    id       int auto_increment
+    id          int auto_increment
         primary key,
-    command  text null,
-    response text null
+    command     text     null,
+    taggable_id int      null,
+    response    longtext null
 );
 
-create table AWSTagging.taggables
+create table taggables
 (
     id                                                  int auto_increment
         primary key,
@@ -81,7 +82,7 @@ create table AWSTagging.taggables
     Tag                                                 text         null
 );
 
-create table AWSTagging.tagged
+create table tagged
 (
     identity    int auto_increment
         primary key,

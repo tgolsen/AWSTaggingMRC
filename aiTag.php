@@ -46,6 +46,8 @@ foreach ($taggables as $data) {
         'VIBE_CMS',
         'terraform',
         'glacier',
+        'jira',
+        'ccmediapay',
     ];
     $possibleBrands = [
         'PMRC',
@@ -69,6 +71,7 @@ foreach ($taggables as $data) {
             - if the data contains 'billboardplus' or uses 'dj' in human readable text, it is probably BillboardPlus.com
             - All charts applications are Billboard brand
             - All BillboardPlus.com applications are Billboard brand
+            - Always give a best guess Name. if too generic, append the type
     Please choose from the provided options:
     - Name: (No options provided, determine freely)
     - Application: [" . implode(', ', $possibleApplications) . "]
@@ -119,7 +122,7 @@ foreach ($taggables as $data) {
             break;
         } else if (!empty($response) && isset($response)) {
             $awsCLICommand = $response;
-            $awsData = executeAWSCLICommand($pdo, $awsCLICommand);
+            $awsData = executeAWSCLICommand($pdo, $data['id'], $awsCLICommand);
 
 //            var_dump($awsData);
 
@@ -134,6 +137,7 @@ foreach ($taggables as $data) {
             - if the data contains 'billboardplus' or uses 'dj' in human readable text, it is probably BillboardPlus.com
             - All charts applications are Billboard brand
             - All BillboardPlus.com applications are Billboard brand
+            - Always give a best guess Name. if too generic, append the type
     Please choose from the provided options:
     - Name: (No options provided, determine freely)
     - Application: [" . implode(', ', $possibleApplications) . "]
@@ -164,7 +168,8 @@ foreach ($taggables as $data) {
             digest of the relevant data. This should be as succinct as possible, but it should be useful if we wanted to
             perform the analysis again without having to make the aws calls. I will refer to this digest as awsDigest.
             If no aws calls were made, return [no aws data].
-            If a field within the awsDigest contains encrypted or otherwise non-human readable data, exclude that field."
+            If a field within the awsDigest contains encrypted or otherwise non-human readable data, exclude that field.
+            Actively remove Certificate contents (actual key contents) and similar encrypted or otherwise non-human readable data. Other Certificate properties (e.g. CertificateArn, DomainName) are OK"
     ];
     [$response, $messages] = $client->chat($messages);
     $awsDataDigest = $response;
@@ -174,10 +179,50 @@ foreach ($taggables as $data) {
         'role' => 'user',
         'content' => "Summarize findings as json that can be parsed. The fields must be id, Identifier, ARN, Name, Application, Brand, Environment, awsDigest."
     ];
-    [$response, $messages] = $client->chat($messages);
 
+    [$response, $messages] = ensureJSON($client, $response, $messages);
     $output = json_decode($response, true);
-    insertRow($pdo, 'tagged', $output);
+
+    if (empty($output)) {
+        echo "Failed to decode JSON response: [$response]\n";
+    }
+
+    try {
+        insertRow($pdo, 'tagged', $output);
+    } catch (Exception $e) {
+        echo "failed to insert data:\n" . $e->getMessage() . "\n";
+        var_dump($output);
+    }
+}
+
+function ensureJSON($client, $response, $messages)
+{
+    $retryAttempts = 3;
+    [$response, $messages] = $client->chat($messages, maxTokens: 2048);
+    for ($i=0; $i < $retryAttempts; $i++) {
+        try {
+            json_decode($response, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception(json_last_error_msg());
+            }
+            echo "successfully decoded json\n";
+            break;
+        } catch (Exception $e) {
+            echo "Failed to parse json response:\n" . $e->getMessage() . "\n";
+            var_dump($response);
+
+            $messages[] = [
+                'role' => 'user',
+                'content' => "The last response was supposed to be json but failed to parse, see error below. Please respond
+            with parseable json only.
+            Error:\n"
+                    .$e->getMessage()
+            ];
+            [$response, $messages] = $client->chat($messages, maxTokens: 2048);
+        }
+    }
+
+    return [$response, $messages];
 }
 
 function pdoQuery($pdo, $sql)
@@ -224,7 +269,7 @@ function insertRow($pdo, $tableName, $row)
     }
 }
 
-function executeAWSCLICommand($pdo, $awsCLICommand): string
+function executeAWSCLICommand($pdo, $taggable_id, $awsCLICommand): ?string
 {
     // Cache in memory
     global $awsCLICommands;
@@ -258,8 +303,19 @@ function executeAWSCLICommand($pdo, $awsCLICommand): string
         $awsCLIFailures[$awsCLICommand] = $e->getMessage();
     }
 
-    pdoQuery($pdo, "INSERT INTO awsCliCommands (command, response) VALUES ('" . $awsCLICommand . "', '" . $awsData . "')");
-    $awsCLICommands[$awsCLICommand] = $awsData;
+    // output length of $awsData string
+    if (!empty($awsData)) {
+        $n = strlen($awsData);
+        echo "data insert size (strlen awsData): $n\n";
+        insertRow($pdo, 'awsCliCommands', [
+            'command' => $awsCLICommand,
+            'taggable_id' => $taggable_id,
+            'response' => $awsData,
+        ]);
+        $awsCLICommands[$awsCLICommand] = $awsData;
+    } else {
+        $awsData = null;
+    }
 
     return $awsData;
 }
