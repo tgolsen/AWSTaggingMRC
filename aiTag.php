@@ -20,7 +20,7 @@ $lastQuery = "";
 $awsCLICommands = [];
 $awsCLIFailures = [];
 
-$taggables = pdoQuery($pdo, "SELECT * FROM taggables");
+$taggables = pdoQuery($pdo, "SELECT * FROM taggables WHERE Type IN ('Instance','Cluster','DBInstance','Bucket')");
 
 foreach ($taggables as $data) {
 
@@ -35,33 +35,6 @@ foreach ($taggables as $data) {
     // Convert data to a descriptive string
     $stringData = json_encode($data);
     echo "Processing  #{$data['id']}\n";
-
-    $possibleApplications = [
-        'billboard',
-        'chart-api',
-        'billboardplus.com',
-        'Billboard_MRC',
-        'globaleaks',
-        'VIBE_MRC',
-        'THR_CMS',
-        'infrastructure',
-        'Charts',
-        'VIBE_CMS',
-        'terraform',
-        'glacier',
-        'jira',
-        'ccmediapay',
-    ];
-    $possibleBrands = [
-        'PMRC',
-        'MRC',
-        'Billboard',
-        'VIBE',
-        'THR',
-    ];
-    $possibleEnvironments = [
-        'Production', 'Staging', 'Development'
-    ];
 
     // Prompt the AI with the structured data using headers
     $messages[] = [
@@ -119,7 +92,7 @@ foreach ($taggables as $data) {
             if ($awsData !== null) {
                 $messages[] = [
                     'role' => 'user',
-                    'content' => "Based on all data gained in the conversation thus far, and this AWS data \"$awsData\", generate the tag data. Environment: [" . implode(', ', $possibleEnvironments) . "]"
+                    'content' => "Based on all data gained in the conversation thus far, and this AWS data \"$awsData\", generate the tag data."
                 ];
                 [$response, $messages] = $client->chat($messages, maxTokens: 2048);
 
