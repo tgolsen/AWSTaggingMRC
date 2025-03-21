@@ -26,7 +26,23 @@ class OpenAIChatClient
             "api-key: {$this->apiKey}"
         ]);
 
+        // Set timeouts to prevent hanging
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30 Seconds max execution time for the request
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // 10 Seconds max connection time
+
         $jsonResponse = curl_exec($ch);
+
+        // Check if the request failed
+        if ($jsonResponse === false) {
+            // Log the error for debugging
+            error_log("cURL Error: " . curl_error($ch));
+
+            // Return a default value or handle the failure gracefully
+            return [
+                'error' => true,
+                'message' => 'Request failed: ' . curl_error($ch)
+            ];
+        }
 
         return json_decode($jsonResponse, true);
     }
@@ -41,6 +57,8 @@ class OpenAIChatClient
      */
     public function chat(array $messages, int $maxTokens = 1024, float $temperature = 0.7): ?array
     {
+        echo "querying chatPMC ...\n";
+
         // Log Prompts
         $logFileHandle = fopen($this->log, 'a');
         fputs($logFileHandle, json_encode($messages) . "\n");
@@ -55,6 +73,20 @@ class OpenAIChatClient
 
         $ch = curl_init();
         $response = $this->aiCurl($ch, $data);
+//        var_dump($response);
+
+        // Handle cURL errors (if 'error' key exists in response)
+        if (isset($response['error']) && $response['error'] === true) {
+            echo "Error in AI request: " . $response['message'] . "\n";
+
+            // Gracefully fail and continue with empty or pre-defined fallback
+            curl_close($ch);
+
+            return [
+                'AI request failed. See logs for more details.',
+                $messages
+            ];
+        }
 
         if (isset($response['error']) && $response['error']['code'] == '429') {
             echo "Rate limit exceeded. Sleeping for 60 seconds...\n";
