@@ -20,6 +20,7 @@ Guidelines:
     - The following applications are always Billboard brand: `chart-api`, `billboardplus.com`, `Billboard_CMS', `Charts`, `synd`, `resizr`
     - All BillboardPlus.com applications are Billboard brand
     - The following applications are always THR brand: `globaleaks`, `THR_CMS`
+    - if the resource has tags referring to 'eks', then Managed is always `kubernetes`
 
 We are asking about one row! Use the `id` field from the source data and return one result. Do not get confused by
 requested data from aws and forget the original task.

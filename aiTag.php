@@ -20,7 +20,7 @@ $lastQuery = "";
 $awsCLICommands = [];
 $awsCLIFailures = [];
 
-$taggables = pdoQuery($pdo, "SELECT * FROM taggables WHERE Type IN ('Instance','Cluster','DBInstance','Bucket')");
+$taggables = pdoQuery($pdo, "SELECT * FROM taggables WHERE id > 1613 AND Type IN ('Instance','Cluster','DBInstance','Bucket')");
 
 foreach ($taggables as $data) {
 
@@ -57,6 +57,12 @@ foreach ($taggables as $data) {
     // Check for memory usage
     $memoryUsage = memory_get_usage(true);
     echo "Memory Usage After # {$data['id']}: {$memoryUsage} bytes\n";
+    if ($memoryUsage > 2097152) {
+        global $awsCLICommands;
+        global $awsCLIFailures;
+        $awsCLICommands = [];
+        $awsCLIFailures = [];
+    }
 
     // Use the AWS CLI output for reanalysis, up to $reanalyzeLimit times
     $awsCLICommands = [];
@@ -71,7 +77,9 @@ foreach ($taggables as $data) {
         If you can create a command, only output a shell command that can be run as-is; no mark-up or explanation.
         Use the list of failed commands to prevent retrying the same command.
         Always include --profile={$_ENV['AWS_PROFILE']} to specify the profile and --region=[the region from the current data] to indicate the region.
-        Use context from the conversation to assist in generating new commands.
+        Use context from the conversation to assist in generating new commands
+        Limit the number of results returned by `aws s3 ls`, `aws s3api list-objects` or similar commands. These commands have options like `--max-items` and `--page-size`.
+        If the command saves a file, output it in the `files` directory.
         Previously used commands are listed here:
         " . implode("\n", array_keys($awsCLICommands)) . "
         Previously failed commands are listed here:
