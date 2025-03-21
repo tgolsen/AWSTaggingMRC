@@ -20,7 +20,7 @@ $lastQuery = "";
 $awsCLICommands = [];
 $awsCLIFailures = [];
 
-$taggables = pdoQuery($pdo, "SELECT * FROM taggables WHERE id > 1613 AND Type IN ('Instance','Cluster','DBInstance','Bucket')");
+$taggables = pdoQuery($pdo, "SELECT * FROM taggables WHERE Type IN ('Instance','Cluster','DBInstance','Bucket')");
 
 foreach ($taggables as $data) {
 
