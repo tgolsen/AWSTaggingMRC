@@ -44,11 +44,7 @@ foreach ($taggables as $data) {
 
     list($response, $messages) = $client->chat($messages);
 
-    if (!empty($response)) {
-        $assistantResponse = $response;
-//        echo "AI Response (# {$data['id']}):\n$assistantResponse\n";
-        $messages[] = ['role' => 'assistant', 'content' => $assistantResponse];
-    } else {
+    if (empty($response)) {
         echo "An error occurred while processing # {$data['id']}.\n";
         var_dump($response);
         continue;
@@ -57,12 +53,12 @@ foreach ($taggables as $data) {
     // Check for memory usage
     $memoryUsage = memory_get_usage(true);
     echo "Memory Usage After # {$data['id']}: {$memoryUsage} bytes\n";
-    if ($memoryUsage > 2097152) {
-        global $awsCLICommands;
-        global $awsCLIFailures;
-        $awsCLICommands = [];
-        $awsCLIFailures = [];
-    }
+//    if ($memoryUsage > 4194304) {
+//        global $awsCLICommands;
+//        global $awsCLIFailures;
+//        $awsCLICommands = [];
+//        $awsCLIFailures = [];
+//    }
 
     // Use the AWS CLI output for reanalysis, up to $reanalyzeLimit times
     $awsCLICommands = [];
@@ -79,7 +75,8 @@ foreach ($taggables as $data) {
         Always include --profile={$_ENV['AWS_PROFILE']} to specify the profile and --region=[the region from the current data] to indicate the region.
         Use context from the conversation to assist in generating new commands
         Limit the number of results returned by `aws s3 ls`, `aws s3api list-objects` or similar commands. These commands have options like `--max-items` and `--page-size`.
-        If the command saves a file, output it in the `files` directory.
+        Do not save any files or redirect output to files.
+        Request output as text (if specified at all).
         Previously used commands are listed here:
         " . implode("\n", array_keys($awsCLICommands)) . "
         Previously failed commands are listed here:
@@ -104,11 +101,7 @@ foreach ($taggables as $data) {
                 ];
                 [$response, $messages] = $client->chat($messages, maxTokens: 2048);
 
-                if (!empty($response) && isset($response)) {
-                    $reanalyzedResponse = $response;
-//                    echo "AI Reanalyzing Response (Iteration $i, # {$data['id']}):\n$reanalyzedResponse\n";
-                    $messages[] = ['role' => 'assistant', 'content' => $reanalyzedResponse];
-                } else {
+                if (empty($response) || !isset($response)) {
                     echo "An error occurred during reanalysis for Iteration $i on # {$data['id']}.\n";
                     break;
                 }
